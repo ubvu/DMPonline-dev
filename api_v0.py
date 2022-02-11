@@ -10,7 +10,7 @@ DEFAULT_HEADERS = {
 
 
 def retrieve_plans(date=None):
-    """ retrieves dmps for a given day (or all)
+    """ retrieves DMPs for a given day (or all)
     :param date: day for which to retrieve plans (None=all)
     :returns generator for page requests
     """
