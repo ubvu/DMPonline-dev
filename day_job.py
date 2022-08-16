@@ -37,9 +37,12 @@ def transform(pages):
             aux = pd.json_normalize(row['questions'])
             aux[['id', 'section']] = row[['id', 'number']]  # keep for join
             qa = qa.append(aux)
-        # remove markup
-        qa[['text', 'answer.text']] = qa[['text', 'answer.text']].applymap(
-            lambda x: BeautifulSoup(x, "lxml").text if not pd.isna(x) else '')
+        # remove markup if there's an answer
+        try:
+            qa[['text', 'answer.text']] = qa[['text', 'answer.text']].applymap(
+                lambda x: BeautifulSoup(x, "lxml").text if not pd.isna(x) else '')
+        except KeyError:
+            pass
         # don't keep nested questions in sections table
         sections = sections.drop(columns='questions')
         # merge tables
