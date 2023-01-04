@@ -16,7 +16,7 @@ def retrieve_plans(date=None):
     """
     # api used to provide a pages count, but that's not the case in current version
     more_pages = True
-    page = 0
+    page = 1
     while more_pages:
         params = {'page': page}
         if date:
