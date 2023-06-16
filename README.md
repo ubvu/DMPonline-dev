@@ -4,7 +4,7 @@ The files are used to download Data Management Plans from DMP Online (http://dmp
 DMP Online is a tool from the DCC in England that allows the creation of structured Data Management Plans based on templates.
 
 The tool can be approached to download data through two different API's: version 0 and version 1.
-For each API there is a specific Python program.
+For each API there is a specific Python program. A separate version "new" was made in case you wish to log (un)succesful runs.
 
 The Config_template file is an example file that is needed to provide credentials to allow access and download the data.
 
