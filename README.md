@@ -6,6 +6,6 @@ DMP Online is a tool from the DCC in England that allows the creation of structu
 The tool can be approached to download data through two different API's: version 0 and version 1.
 For each API there is a specific Python program.
 
-The Config file is needed to provide credential to allow access and download the data.
+The Config_template file is an example file that is needed to provide credentials to allow access and download the data.
 
 The day_job file is scheduled to run each day to download DMP json files that have changed. 
