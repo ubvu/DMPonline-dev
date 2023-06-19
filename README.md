@@ -9,3 +9,5 @@ For each API there is a specific Python program. A separate version "new" was ma
 The Config_template file is an example file that is needed to provide credentials to allow access and download the data.
 
 The day_job file is scheduled to run each day to download DMP json files that have changed. 
+
+The API confog files have each a specific separate branch with changes made to add a logging option to catch connection errors to DMP Online servers.
