@@ -1,5 +1,6 @@
 import requests
 from config import CLIENT_SECRET
+from loguru import logger
 
 DMP_ONLINE_URL = 'https://dmponline.vu.nl/api/v0'
 
@@ -7,6 +8,10 @@ DEFAULT_HEADERS = {
     'Content-Type': 'application/json',
     'Authorization': f'Token token={CLIENT_SECRET}'
 }
+
+logger.add(r'U:\Werk\Data Management\Python\Files\DMP_Online\API_0_orig.log', backtrace=True, diagnose=True, rotation="10 MB", retention="12 months")
+logger.debug('The script was running today.')
+@logger.catch()
 
 def retrieve_plans(identifier=None):
     """ retrieves dmps for a given id (or all)
