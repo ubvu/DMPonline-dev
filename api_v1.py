@@ -1,5 +1,6 @@
 import requests
 from config import CLIENT_SECRET, EMAIL
+from loguru import logger
 
 
 DMP_ONLINE_URL = 'https://dmponline.vu.nl/api/v1'
@@ -9,6 +10,9 @@ DEFAULT_HEADERS = {
     'Accept': 'application/json'
 }
 
+logger.add(r'U:\Werk\Data Management\Python\Files\DMP_Online\API_1_orig.log', backtrace=True, diagnose=True, rotation="10 MB", retention="12 months")
+logger.debug('The script was running today.')
+@logger.catch()
 
 def retrieve_auth_token():
     payload = {
