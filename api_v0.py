@@ -1,5 +1,6 @@
 import requests
 from config import CLIENT_SECRET
+from loguru import logger
 
 DMP_ONLINE_URL = 'https://dmponline.vu.nl/api/v0'
 
@@ -8,10 +9,13 @@ DEFAULT_HEADERS = {
     'Authorization': f'Token token={CLIENT_SECRET}'
 }
 
+logger.add(r'U:\Werk\Data Management\Python\Files\DMP_Online\API_0v1.log', backtrace=True, diagnose=True, rotation="10 MB", retention="12 months")
+logger.debug('The script was running today.')
+@logger.catch()
 
-def retrieve_plans(date=None):
-    """ retrieves DMPs for a given day (or all)
-    :param date: day for which to retrieve plans (None=all)
+def retrieve_plans(identifier=None):
+    """ retrieves dmps for a given id (or all)
+    :param identifier: plan number for which to retrieve full-text (None=all)
     :returns generator for page requests
     """
     # api used to provide a pages count, but that's not the case in current version
@@ -19,9 +23,8 @@ def retrieve_plans(date=None):
     page = 1
     while more_pages:
         params = {'page': page}
-        if date:
-            params['updated_after'] = date
-            params['updated_before'] = date
+        if identifier:
+            params['plan'] = identifier
         data = request_api(params)
         if data:
             print(f'retrieved page {page}')
@@ -44,5 +47,6 @@ def request_api(params):
             return data
     else:
         print('api error')
+        print(resp.status_code)
+        print(resp.text)
         return None
-
