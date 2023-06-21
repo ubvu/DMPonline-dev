@@ -47,6 +47,7 @@ def request_api(params):
             return data
     else:
         print('api error')
+        logger.error("API error.")
         print(resp.status_code)
         print(resp.text)
         return None
