@@ -30,6 +30,7 @@ def retrieve_auth_token():
         print('fetched token')
     else:
         print('could not fetch token')
+        logger.error("Could not fetch token.")
     return token
 
 
@@ -44,6 +45,7 @@ def retrieve_plan(token, id):
         data = resp.json()['items']
     else:
         print('api error')
+        logger.error("API error.")
     
     return data
 
