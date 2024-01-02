@@ -1,8 +1,8 @@
 # This script is intended to create statistics from DMPs in DMP Online
 # It is based on downloaded json files
 # Mark Bruyneel
-# 2023-08-14
-# Script version 1.3
+# 2024-01-01
+# Script version 1.2
 #
 # The API scripts were created by Max Paulus. https://github.com/paulmaxus
 #
@@ -21,12 +21,23 @@ from pathlib import Path
 
 # Show all data in screen
 pd.set_option("display.max.columns", None)
+
 # Create year variable for filenames to get only files for the current year
-# This for when the script is periodically run during the yeartoday = datetime.now()
+# This for when the script is periodically run during the year: on the first of the month
+# The rundate if scheduled on the first of January is adjusted to account for availability
+# of downloaded data.
 today = datetime.now()
-year = today.strftime("%Y")
-runday = str(datetime.today().date())
-runyear = str(datetime.today().year)
+month = today.month
+day = today.day
+if month==1 and day==1:
+    yearnew = today.year
+    runyear = str(yearnew - 1)
+    year = runyear
+    runday = runyear + '-12-31'
+else:
+    year = today.strftime("%Y")
+    runday = str(datetime.today().date())
+    runyear = str(datetime.today().year)
 
 # Step 1 Read Json files
 # Establish location and files with data. Put the filenames in a table
