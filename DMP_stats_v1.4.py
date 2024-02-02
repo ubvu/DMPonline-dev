@@ -1,8 +1,8 @@
 # This script is intended to create statistics from DMPs in DMP Online
 # It is based on downloaded json files
 # Mark Bruyneel
-# 2024-01-01
-# Script version 1.2
+# 2024-02-01
+# Script version 1.3
 #
 # The API scripts were created by Max Paulus. https://github.com/paulmaxus
 #
@@ -182,7 +182,7 @@ def remove_html(text):
     return output
 
 # List of characters combinations to clean or replace in text fields
-tags_sp = ['&ndash', '&nbsp', '&amp']
+tags_sp = ['&ndash', '&nbsp', '&amp', '&amp;']
 tags_nv = [';']
 
 # Step 5a Start getting the data from the GDPR form json files
@@ -805,7 +805,7 @@ while i != filenrg:
                     while eeanr < texteea:
                         transfereea = transfereea + (Dictionaryeea['answer']['options'][eeanr]['text'])
                         eeanr = eeanr + 1
-                    answereea = transfereea
+                        answereea = transfereea
             except:
                 answereea = 'Unknown'
                 answereead = 'Unknown'
@@ -1751,45 +1751,87 @@ while v != filenrcert:
             Data_transfer_h.append(answertrh)
             Data_transfer_ah.append(answertrah)
 
-            Dictionaryeeah = l2['plan_content'][0]['sections'][3]['questions'][6]
-            dictleneeah = len(Dictionaryeeah)
-            Data_transfer_eeah = []
-            Data_transfer_eea_dh = []
-            a = 7
-            try:
-                if dictleneeah < a:
-                    answereeah = 'Unknown'
-                    answereeadh = 'Unknown'
-                else:
-                    texteeadh = Dictionaryeeah['answer']['text']
-                    answereeadht = remove_html(texteeadh)
-                    # Combine multiline input into a single line
-                    answereeadh = "_-_".join(line.strip() for line in answereeadht.splitlines())
-                    # Remove the special characters
-                    for tag in tags_sp:
-                        if tag in answereeadh:
-                            answereeadh = answereeadh.replace(tag, ' ')
-                    for tag in tags_nv:
-                        if tag in answereeadh:
-                            answereeadh = answereeadh.replace(tag, '')
-                    if answereeadh == '':
+
+            if len(l2['plan_content'][0]['sections'][3]['questions']) >= 7:
+                Dictionaryeeah = l2['plan_content'][0]['sections'][3]['questions'][6]
+                dictleneeah = len(Dictionaryeeah)
+                Data_transfer_eeah = []
+                Data_transfer_eea_dh = []
+                a = 7
+                try:
+                    if dictleneeah < a:
+                        answereeah = 'Unknown'
                         answereeadh = 'Unknown'
                     else:
-                        answereeadh = answereeadh
+                        texteeadh = Dictionaryeeah['answer']['text']
+                        answereeadht = remove_html(texteeadh)
+                        # Combine multiline input into a single line
+                        answereeadh = "_-_".join(line.strip() for line in answereeadht.splitlines())
+                        # Remove the special characters
+                        for tag in tags_sp:
+                            if tag in answereeadh:
+                                answereeadh = answereeadh.replace(tag, ' ')
+                        for tag in tags_nv:
+                            if tag in answereeadh:
+                                answereeadh = answereeadh.replace(tag, '')
+                        if answereeadh == '':
+                            answereeadh = 'Unknown'
+                        else:
+                            answereeadh = answereeadh
 
-                    texteeah = len(Dictionaryeeah['answer']['options'])
-                    eeanrh = 0
-                    transfereeah = ''
-                    while eeanrh < texteeah:
-                        transfereeah = transfereeah + (Dictionaryeeah['answer']['options'][eeanrh]['text'])
-                        eeanrh = eeanrh + 1
-                    answereeah = transfereeah
-            except:
-                answereeah = 'Unknown'
-                answereeadh = 'Unknown'
-                pass
-            Data_transfer_eeah.append(answereeah)
-            Data_transfer_eea_dh.append(answereeadh)
+                        texteeah = len(Dictionaryeeah['answer']['options'])
+                        eeanrh = 0
+                        transfereeah = ''
+                        while eeanrh < texteeah:
+                            transfereeah = transfereeah + (Dictionaryeeah['answer']['options'][eeanrh]['text'])
+                            eeanrh = eeanrh + 1
+                        answereeah = transfereeah
+                except:
+                    answereeah = 'Unknown'
+                    answereeadh = 'Unknown'
+                    pass
+                Data_transfer_eeah.append(answereeah)
+                Data_transfer_eea_dh.append(answereeadh)
+            else:
+                Dictionaryeeah = l2['plan_content'][0]['sections'][3]['questions'][5]
+                dictleneeah = len(Dictionaryeeah)
+                Data_transfer_eeah = []
+                Data_transfer_eea_dh = []
+                a = 7
+                try:
+                    if dictleneeah < a:
+                        answereeah = 'Unknown'
+                        answereeadh = 'Unknown'
+                    else:
+                        texteeadh = Dictionaryeeah['answer']['text']
+                        answereeadht = remove_html(texteeadh)
+                        # Combine multiline input into a single line
+                        answereeadh = "_-_".join(line.strip() for line in answereeadht.splitlines())
+                        # Remove the special characters
+                        for tag in tags_sp:
+                            if tag in answereeadh:
+                                answereeadh = answereeadh.replace(tag, ' ')
+                        for tag in tags_nv:
+                            if tag in answereeadh:
+                                answereeadh = answereeadh.replace(tag, '')
+                        if answereeadh == '':
+                            answereeadh = 'Unknown'
+                        else:
+                            answereeadh = answereeadh
+
+                        texteeah = len(Dictionaryeeah['answer']['options'])
+                        eeanrh = 0
+                        transfereeah = ''
+                        while eeanrh < texteeah:
+                            transfereeah = transfereeah + (Dictionaryeeah['answer']['options'][eeanrh]['text'])
+                            eeanrh = eeanrh + 1
+                        answereeah = transfereeah
+                except:
+                    answereeah = 'Unknown'
+                    answereeadh = 'Unknown'
+                    pass
+                Data_transfer_eeah.append(answereeah)
+                Data_transfer_eea_dh.append(answereeadh)
 
             Dictionaryecoh = l2['plan_content'][0]['sections'][2]['questions'][2]
             dictlenecoh = len(Dictionaryecoh)
@@ -2201,7 +2243,7 @@ while m != metafilenr:
     project_end = []
     for l1 in data_meta:
         for l2 in l1:
-            id_list_md.append(str(l2['dmp']['dmp_id']['identifier'][40:]))
+            id_list_md.append(str(l2['dmp']['dmp_id']['identifier'][41:]))
             project_start.append(l2['dmp']['project'][0]['start'][0:10])
             project_end.append(l2['dmp']['project'][0]['end'][0:10])
     # Closing file
@@ -2259,9 +2301,15 @@ Register_sensitive_research.to_csv(f'U:\Werk\Data Management\Python\\Files\DMP_O
 Path('DMP_stats\\'+runyear+'\Final').mkdir(parents=True, exist_ok=True)
 
 # Get the first list based on the older DMP templates
-firstlist = pd.read_csv('U:\Werk\Data Management\Python\\Files\DMP_Online\DMP_stats\\'+runyear+'\\overview\\registerlist_'+runday+'.csv', index_col=0)
-
-# Combine both lists
-Register_sensitive_research_final = pd.concat([firstlist, Register_sensitive_research], ignore_index=True)
-# Save the combined list in the specific "Final" folder
-Register_sensitive_research_final.to_csv(f'U:\Werk\Data Management\Python\\Files\DMP_Online\DMP_stats\\'+runyear+'\\Final\\registerlist_'+runday+'.csv', encoding='utf-8')
+firstpath = 'U:\Werk\Data Management\Python\\Files\DMP_Online\DMP_stats\\'+runyear+'\\overview'
+firstdir = os.listdir(firstpath)
+if len(firstdir) == 0:
+    Register_sensitive_research.to_csv(f'U:\Werk\Data Management\Python\\Files\DMP_Online\DMP_stats\\'+runyear+'\\Final\\registerlist_'+runday+'.csv', encoding='utf-8')
+    print('No list of DMPs based on older templates')
+    pass
+else:
+    firstlist = pd.read_csv('U:\Werk\Data Management\Python\\Files\DMP_Online\DMP_stats\\'+runyear+'\\overview\\registerlist_'+runday+'.csv', index_col=0)
+    # Combine both lists
+    Register_sensitive_research_final = pd.concat([firstlist, Register_sensitive_research], ignore_index=True)
+    # Save the combined list in the specific "Final" folder
+    Register_sensitive_research_final.to_csv(f'U:\Werk\Data Management\Python\\Files\DMP_Online\DMP_stats\\'+runyear+'\\Final\\registerlist_'+runday+'.csv', encoding='utf-8')
