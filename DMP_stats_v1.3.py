@@ -1,8 +1,8 @@
 # This script is intended to create statistics from DMPs in DMP Online
 # It is based on downloaded json files
 # Mark Bruyneel
-# 2024-01-11
-# Script version 1.3
+# 2024-02-01
+# Script version 1.4
 #
 # The API scripts were created by Max Paulus. https://github.com/paulmaxus
 #
@@ -21,6 +21,7 @@ from pathlib import Path
 
 # Show all data in screen
 pd.set_option("display.max.columns", None)
+pd.options.mode.copy_on_write = True
 
 # Create year variable for filenames to get only files for the current year
 # This for when the script is periodically run during the year: on the first of the month
@@ -182,7 +183,7 @@ def remove_html(text):
     return output
 
 # List of characters combinations to clean or replace in text fields
-tags_sp = ['&ndash', '&nbsp', '&amp']
+tags_sp = ['&ndash', '&nbsp', '&amp;', '&amp']
 tags_nv = [';']
 
 # Step 5a Start getting the data from the GDPR form json files
@@ -192,7 +193,7 @@ pathg = 'U:\Werk\Data Management\Python\Files\DMP_Online\DMP_stats\\'+runyear+'\
 dmplistgdpr = lambda x: os.path.isfile(os.path.join(pathg, x))
 files_list_gdpr = filter(dmplistgdpr, os.listdir(pathg))
 
-# Create a list of files in directory along with the size
+# Create a list of files in dir/ectory along with the size
 size_of_file_g = [
     (f, os.stat(os.path.join(pathg, f)).st_size)
     for f in files_list_gdpr
@@ -1108,10 +1109,13 @@ while i != filenrg:
     DMP_gdpr_data = pd.concat([DMP_gdpr_data, test_listg], ignore_index=True)
     i = i + 1
 
-# Drop DMPs that no longer exist and have null data in the overview
-DMP_gdpr_data = DMP_gdpr_data.dropna(subset=['id'])
-# Export result as a CSV file with the date of the Python run
-DMP_gdpr_data.to_csv(f'U:\Werk\Data Management\Python\\Files\DMP_Online\DMP_stats\\'+runyear+'\\overview\\gdprfulldmplist_'+runday+'.csv', encoding='utf-8')
+if DMP_gdpr_data.empty:
+    pass
+else:
+    # Drop DMPs that no longer exist and have null data in the overview
+    DMP_gdpr_data = DMP_gdpr_data.dropna(subset=['id'])
+    # Export result as a CSV file with the date of the Python run
+    DMP_gdpr_data.to_csv(f'U:\Werk\Data Management\Python\\Files\DMP_Online\DMP_stats\\'+runyear+'\\overview\\gdprfulldmplist_'+runday+'.csv', encoding='utf-8')
 
 # Step 5b Start getting the data from the VU main DMP form from json files
 # The DMPs for the VU template are in this folder
@@ -2087,118 +2091,127 @@ while v != filenrcert:
     DMP_cert_data = pd.concat([DMP_cert_data, test_listh], ignore_index=True)
     v = v + 1
 
-# Drop DMPs that no longer exist and have null data in the overview
-DMP_cert_data = DMP_cert_data.dropna(subset=['id'])
-# Export full file with cert VU DMP data
-DMP_cert_data.to_csv(f'U:\Werk\Data Management\Python\\Files\DMP_Online\DMP_stats\\'+runyear+'\\overview\\certfulldmplist_'+runday+'.csv', encoding='utf-8')
+if DMP_cert_data.empty and DMP_gdpr_data.empty:
+    print("No DMPs based on the older templates found.")
+    pass
+else: # Drop DMPs that no longer exist and have null data in the overview
+    DMP_cert_data = DMP_cert_data.dropna(subset=['id'])
+    # Export full file with cert VU DMP data
+    DMP_cert_data.to_csv(f'U:\Werk\Data Management\Python\\Files\DMP_Online\DMP_stats\\'+runyear+'\\overview\\certfulldmplist_'+runday+'.csv', encoding='utf-8')
 
-# Step 6: Combine data from both certified VU template dmps and GDPR forms into an overview
-# Create an empty dataframe
-Register_sensitive_research_temp = pd.DataFrame()
-# Make a list of Tables / DataFrames to combine
-overview = [DMP_cert_data, DMP_gdpr_data]
-# Combine both into a single table
-Register_sensitive_research_temp = pd.concat(overview, ignore_index=True)
+    # Step 6: Combine data from both certified VU template dmps and GDPR forms into an overview
 
-# Step 7 Get a list of all DMPS to process and get the metadata through api2
-Path('DMP_stats\\'+runyear+'\meta_all').mkdir(parents=True, exist_ok=True)
-filenrfm = Register_sensitive_research_temp.shape[0]
-filenrf = str(filenrfm)
-metalist = Register_sensitive_research_temp['id'].values.tolist()
-dmps = metalist
+    if DMP_cert_data.empty:
+        # Create an empty dataframe
+        Register_sensitive_research_temp = pd.DataFrame()
+        Register_sensitive_research_temp = DMP_gdpr_data.copy()
+    else:
+        # Create an empty dataframe
+        Register_sensitive_research_temp = pd.DataFrame()
+        # Make a list of Tables / DataFrames to combine
+        overview = [DMP_cert_data, DMP_gdpr_data]
+        # Combine both into a single table
+        Register_sensitive_research_temp = pd.concat(overview, ignore_index=True)
 
-# api2 currently has a limit somewhere beyond 150 items
-# Step 8 Use metalist to download the meta for DMPS as separate file
-if len(dmps) < 151:
-    filenrf = str(len(dmps))
-    print('Gettings data for ' + filenrf + ' DMPs')
-    plans = api2.retrieve_plans(dmps)
-    pages = list(plans)
-    # save json file of the DMP
-    with open(f'DMP_stats\\'+runyear+'\meta_all\DMPS_metadata0.json', 'w') as f:
-        f.write(json.dumps(pages))
-else:
-    # divide up the full list in brackets of 150
-    fmllen = len(dmps)
-    nrofml = round(len(dmps) / 150) + 1
-    print("Nr. of sublists to generate: ", nrofml)
+    # Step 7 Get a list of all DMPS to process and get the metadata through api2
+    Path('DMP_stats\\'+runyear+'\meta_all').mkdir(parents=True, exist_ok=True)
+    filenrfm = Register_sensitive_research_temp.shape[0]
+    filenrf = str(filenrfm)
+    metalist = Register_sensitive_research_temp['id'].values.tolist()
+    dmps = metalist
 
-    def getnums(s, e, i):
-        return list(range(s, e, i))
-
-    nroflists = (getnums(0, int(nrofml), 1))
-
-    snrofml = 0
-    startmlnr = 0
-    while snrofml < fmllen:
-        startl = snrofml
-        endl = snrofml + 150
-        mlistnew = dmps[startl: endl]
-        print("Nr. of DMPS in the list it is fetching data for: ", len(mlistnew))
-        plans = api2.retrieve_plans(mlistnew)
+    # api2 currently has a limit somewhere beyond 150 items
+    # Step 8 Use metalist to download the meta for DMPS as separate file
+    if len(dmps) < 151:
+        filenrf = str(len(dmps))
+        print('Gettings data for ' + filenrf + ' DMPs')
+        plans = api2.retrieve_plans(dmps)
         pages = list(plans)
         # save json file of the DMP
-        with open(f'DMP_stats\\'+runyear+'\meta_all/DMPS_metadata'+str(startmlnr)+'.json', 'w') as f:
+        with open(f'DMP_stats\\'+runyear+'\meta_all\DMPS_metadata0.json', 'w') as f:
             f.write(json.dumps(pages))
-        snrofml = snrofml + 150
-        startmlnr = startmlnr + 1
+    else:
+        # divide up the full list in brackets of 150
+        fmllen = len(dmps)
+        nrofml = round(len(dmps) / 150) + 1
+        print("Nr. of sublists to generate: ", nrofml)
 
-# Step 9 Use Metadata json file to get data for each dmp
-# Get list of all metadata files only in the given directory
-metapath = 'U:\Werk\Data Management\Python\Files\DMP_Online\DMP_stats\\'+runyear+'\meta_all'
+        def getnums(s, e, i):
+            return list(range(s, e, i))
 
-metadmplist = lambda x: os.path.isfile(os.path.join(metapath, x))
-metafiles_list = filter(metadmplist, os.listdir(metapath))
+        nroflists = (getnums(0, int(nrofml), 1))
 
-# Create a table with the list as input
-metadmp_list = pd.DataFrame(metafiles_list, columns=['File_name'])
+        snrofml = 0
+        startmlnr = 0
+        while snrofml < fmllen:
+            startl = snrofml
+            endl = snrofml + 150
+            mlistnew = dmps[startl: endl]
+            print("Nr. of DMPS in the list it is fetching data for: ", len(mlistnew))
+            plans = api2.retrieve_plans(mlistnew)
+            pages = list(plans)
+            # save json file of the DMP
+            with open(f'DMP_stats\\'+runyear+'\meta_all/DMPS_metadata'+str(startmlnr)+'.json', 'w') as f:
+                f.write(json.dumps(pages))
+            snrofml = snrofml + 150
+            startmlnr = startmlnr + 1
 
-metafilenr = metadmp_list.shape[0]
+    # Step 9 Use Metadata json file to get data for each dmp
+    # Get list of all metadata files only in the given directory
+    metapath = 'U:\Werk\Data Management\Python\Files\DMP_Online\DMP_stats\\'+runyear+'\meta_all'
 
-print('Number of Metadata Json files to process: ', metafilenr)
+    metadmplist = lambda x: os.path.isfile(os.path.join(metapath, x))
+    metafiles_list = filter(metadmplist, os.listdir(metapath))
 
-DMP_meta_data = pd.DataFrame()
-m = 0
-while m != metafilenr:
-    logger.debug(f'Copying and adding meta data from ' + metadmp_list.File_name[m])
-    nf = open(f'U:\Werk\Data Management\Python\\Files\DMP_Online\DMP_stats\\{runyear}\meta_all/{metadmp_list.File_name[m]}', 'r')
-    # returns JSON object as a dictionary
-    data_meta = json.load(nf)
-    # Iterating through the metadata json file to get specific items for all DMPs
-    id_list_md = []
-    project_start = []
-    project_end = []
-    for l1 in data_meta:
-        for l2 in l1:
-            id_list_md.append(str(l2['dmp']['dmp_id']['identifier'][40:]))
-            project_start.append(l2['dmp']['project'][0]['start'][0:10])
-            project_end.append(l2['dmp']['project'][0]['end'][0:10])
-    # Closing file
-    nf.close()
-    id_data_md = {'id': id_list_md}
-    test_listmd = pd.DataFrame(id_data_md)
-    test_listmd['project_start'] = project_start
-    test_listmd['project_end'] = project_end
-    DMP_meta_data = pd.concat([DMP_meta_data, test_listmd], ignore_index=True)
-    m = m + 1
+    # Create a table with the list as input
+    metadmp_list = pd.DataFrame(metafiles_list, columns=['File_name'])
 
-DMP_meta_data.to_csv(f'U:\Werk\Data Management\Python\\Files\DMP_Online\DMP_stats\\'+runyear+'\\overview\\register_metadata_list_'+runday+'.csv', encoding='utf-8')
+    metafilenr = metadmp_list.shape[0]
 
-# Step 10: Combine data and metadata for all DMPs
-Register_sensitive_research = pd.DataFrame()
-Register_sensitive_research = pd.merge(Register_sensitive_research_temp, DMP_meta_data, on='id')
+    print('Number of Metadata Json files to process: ', metafilenr)
 
-# Step 11: Use a list to create Faculty names (abbreviations) based on variations in the name
-# provided in the text field Organisation. The list can be expanded if needed.
-filename = "faculty_names.csv"
-path = os.path.join(r'U:\Werk\Data Management\Python\Files\DMP_Online\DMP_stats', filename)
-var_fac = pd.read_csv(path)
-# If needed a dictionary for the values can be made
-dict_lookup = dict(zip(var_fac['Faculty_name'], var_fac['Abbrev']))
+    DMP_meta_data = pd.DataFrame()
+    m = 0
+    while m != metafilenr:
+        logger.debug(f'Copying and adding meta data from ' + metadmp_list.File_name[m])
+        nf = open(f'U:\Werk\Data Management\Python\\Files\DMP_Online\DMP_stats\\{runyear}\meta_all/{metadmp_list.File_name[m]}', 'r')
+        # returns JSON object as a dictionary
+        data_meta = json.load(nf)
+        # Iterating through the metadata json file to get specific items for all DMPs
+        id_list_md = []
+        project_start = []
+        project_end = []
+        for l1 in data_meta:
+            for l2 in l1:
+                id_list_md.append(str(l2['dmp']['dmp_id']['identifier'][41:]))
+                project_start.append(l2['dmp']['project'][0]['start'][0:10])
+                project_end.append(l2['dmp']['project'][0]['end'][0:10])
+        # Closing file
+        nf.close()
+        id_data_md = {'id': id_list_md}
+        test_listmd = pd.DataFrame(id_data_md)
+        test_listmd['project_start'] = project_start
+        test_listmd['project_end'] = project_end
+        DMP_meta_data = pd.concat([DMP_meta_data, test_listmd], ignore_index=True)
+        m = m + 1
 
-Register_sensitive_research['Faculty_name'] = ""
-for y, z in dict_lookup.items():
-    Register_sensitive_research['Faculty_name'] = np.where(Register_sensitive_research['Organisation'].str.contains(y, case=False), z, Register_sensitive_research['Faculty_name'])
+    DMP_meta_data.to_csv(f'U:\Werk\Data Management\Python\\Files\DMP_Online\DMP_stats\\'+runyear+'\\overview\\register_metadata_list_'+runday+'.csv', encoding='utf-8')
 
-# Step 12: Export the overview for the register
-Register_sensitive_research.to_csv(f'U:\Werk\Data Management\Python\\Files\DMP_Online\DMP_stats\\'+runyear+'\\overview\\registerlist_'+runday+'.csv', encoding='utf-8')
+    # Step 10: Combine data and metadata for all DMPs
+    Register_sensitive_research = pd.DataFrame()
+    Register_sensitive_research = pd.merge(Register_sensitive_research_temp, DMP_meta_data, on='id')
+
+    # Step 11: Use a list to create Faculty names (abbreviations) based on variations in the name
+    # provided in the text field Organisation. The list can be expanded if needed.
+    filename = "faculty_names.csv"
+    path = os.path.join(r'U:\Werk\Data Management\Python\Files\DMP_Online\DMP_stats', filename)
+    var_fac = pd.read_csv(path)
+    # If needed a dictionary for the values can be made
+    dict_lookup = dict(zip(var_fac['Faculty_name'], var_fac['Abbrev']))
+
+    Register_sensitive_research['Faculty_name'] = ""
+    for y, z in dict_lookup.items():
+        Register_sensitive_research['Faculty_name'] = np.where(Register_sensitive_research['Organisation'].str.contains(y, case=False), z, Register_sensitive_research['Faculty_name'])
+
+    # Step 12: Export the overview for the register
+    Register_sensitive_research.to_csv(f'U:\Werk\Data Management\Python\\Files\DMP_Online\DMP_stats\\'+runyear+'\\overview\\registerlist_'+runday+'.csv', encoding='utf-8')
